@@ -10,8 +10,6 @@
   and diamonds between the two inventories.
 
   Current shortcomings:
-  - It's very easy to slightly (or deliberately) misspell the username, causing
-    unbreakable chests
   - Placing a chest left of a single chest will merge them and override the
     name, to be safe always put double chests
   - Make it possible to use the display name of renamed items in the price list

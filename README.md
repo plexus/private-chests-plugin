@@ -20,9 +20,17 @@ same username. Hoppers can still put items in the chest.
 You can put anything after `@your-username`, as long as it is followed first by
 a space or a single quote `'`, e.g. `@sunnyplexus's banana shop`.
 
+You can only @-name items with your own username, anything else will fail. This
+is to prevent misspellings, which would create chests that nobody can break.
+
+The price list items must follow the exact pattern `<number> <material> :
+<number> <material>`. Optionally an `s` can be added to the material name to
+pluralize it, but irregular plurals are not currently recognized. Casing (upper
+vs lower case) is ignored.
+
 Known shortcoming: if you place a single private chest, then someone can put
 another chest left of it to create a double chest, which will take on the name
-of the left chest, thus bypassing the mechanism.
+of the left chest, thus bypassing the mechanism. So, always place double chests.
 
 There will still be game mechanisms that allow you to break the chest, e.g. TNT,
 pistons, so this isn't tamperproof yet.
