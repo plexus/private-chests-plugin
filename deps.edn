@@ -1,0 +1,22 @@
+{:paths ["src" "test" "resources" "classes"]
+ :deps  {org.clojure/clojure         {:mvn/version "1.11.1"}
+         com.lambdaisland/witchcraft {:local/root "/home/arne/github/lambdaisland/witchcraft"} #_{:mvn/version "RELEASE"}
+         io.papermc.paper/paper-api  {:mvn/version "1.18.2-R0.1-SNAPSHOT"}}
+
+ :aliases
+ {:build-plugin
+  {:extra-paths ["src" "resources"]
+   :extra-deps  {io.github.clojure/tools.build {:git/url    "https://github.com/clojure/tools.build"
+                                                :git/sha    "1309f935b098123eb807c972a053eeab77f6f4cd"
+                                                :git/branch "master"}
+                 com.lambdaisland/witchcraft   {:mvn/version "RELEASE"}
+                 io.papermc.paper/paper-api    {:mvn/version "1.18.2-R0.1-SNAPSHOT"}
+                 shade/shade                   {:mvn/version "0.4.0"}}
+   :ns-default  build-plugin
+   :exec-fn     build}}
+
+ :mvn/repos
+ {"glowstone-repo" {:url "https://repo.glowstone.net/content/repositories/snapshots/"}
+  "aikar"          {:url "https://repo.aikar.co/nexus/content/repositories/aikar-release/"}
+  "papermc"        {:url "https://papermc.io/repo/repository/maven-public/"}
+  "spigot"         {:url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"}}}
