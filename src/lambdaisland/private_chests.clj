@@ -36,7 +36,6 @@
         (keep (fn [{:keys [display-name]}]
                 (when display-name
                   (when-let [[_ a b c d] (re-find #"^(\d+)\s+([^:]+)?:\s*(\d+)\s+(.*)\s*$" display-name)]
-                    (prn a b c d)
                     [(as-material-name b)
                      [(/ (Long/parseLong c)
                          (Long/parseLong a))
@@ -71,7 +70,7 @@
            player          (:whoClicked x)
            player-inv      (wc/inventory (:whoClicked x))
            price-list      (price-list inv)
-           clicked-item    (:currentItem x)
+           ^org.bukkit.inventory.ItemStack clicked-item (:currentItem x)
            clicked-amount  (.getAmount clicked-item)
            clicked-in-top? (= (:inventory x) (:clickedInventory x))]
        (when (other-player-inv? (:inventory x) player)
@@ -85,27 +84,56 @@
            clicked-in-top?
            (do
              (e/cancel! x)
-             (when (and )(= (wc/material-name (:cursor x)) :air)
-                   (when-let [[coin-amount coin-type] (get price-list (wc/material-name (:currentItem x)))]
-                     (let [total-price   (Math/ceil (* clicked-amount coin-amount))
-                           not-removed   (wc/remove-inventory player coin-type total-price)
-                           removed-count (- total-price (transduce (map #(.getAmount %)) + 0 (vals not-removed)))
-                           paid-for      (Math/floor (/ removed-count coin-amount))]
-                       (wc/remove-inventory inv (wc/material clicked-item) paid-for)
-                       (wc/add-inventory player (wc/material clicked-item) paid-for)
-                       (wc/add-inventory inv coin-type removed-count))))))))))
+             (when (= (wc/material-name (:cursor x)) :air)
+               (when-let [[coin-amount coin-type] (get price-list (wc/material-name (:currentItem x)))]
+                 (let [total-price   (Math/floor (* clicked-amount coin-amount))
+                       not-removed   (wc/remove-inventory player coin-type total-price)
+                       removed-count (- total-price (transduce (map #(.getAmount ^org.bukkit.inventory.ItemStack %)) + 0 (vals not-removed)))
+                       paid-for      (Math/floor (/ removed-count coin-amount))]
+                   (wc/remove-inventory inv (wc/material clicked-item) paid-for)
+                   (wc/add-inventory player (wc/material clicked-item) paid-for)
+                   (wc/add-inventory inv coin-type removed-count))))))))))
 
   (e/listen!
    :inventory-drag
    ::disallow-dragging
    (fn [x]
-     (let [inv    (:inventory x)
+     (let [^org.bukkit.inventory.Inventory inv (:inventory x)
            player (:whoClicked x)]
        (when (and (other-player-inv? inv player)
                   (some #(< % (.getSize inv)) (keys (:newItems x))))
-         (e/cancel! x))))))
+         (e/cancel! x)))))
+
+  (e/listen-raw!
+   :inventory-move-item
+   ::disallow-hopper-draining
+   ;; This one we need to be careful not to waste cycles, do a quick
+   ;; short-circuit unless the source has an owner
+   (fn [^org.bukkit.event.inventory.InventoryMoveItemEvent e]
+     (when-let [source (some-> e .getSource wc/get-block wc/display-name)]
+       (when (= \@ (first source))
+         (when-let [destination (some-> e .getDestination wc/get-block wc/display-name)]
+           (when (or (not= \@ (first destination))
+                     (not= (re-find #"@\w+" source)
+                           (re-find #"@\w+" destination)))
+             (e/cancel! e)))))))
+
+  (e/listen-raw!
+   :inventory-click
+   ::prevent-illegal-rename
+   (fn [^org.bukkit.event.inventory.InventoryClickEvent e]
+     (when (and (= org.bukkit.event.inventory.InventoryType/ANVIL
+                   (some-> e .getInventory .getType))
+                (= org.bukkit.event.inventory.InventoryType$SlotType/RESULT
+                   (.getSlotType e)))
+       (when-let [item-name (some-> e .getCurrentItem wc/display-name)]
+         (when (and (= \@ (first item-name))
+                    (not (.startsWith item-name (str "@" (wc/display-name (.getWhoClicked e))))))
+           (e/cancel! e)))))))
 
 (defn remove-handlers []
   (e/unlisten! :block-break ::disallow-break)
   (e/unlisten! :inventory-click ::handle-shopping)
-  (e/unlisten! :inventory-drag ::disallow-dragging))
+  (e/unlisten! :inventory-drag ::disallow-dragging)
+  (e/unlisten! :inventory-move-item ::disallow-hopper-draining)
+  (e/unlisten! :inventory-click ::prevent-illegal-rename))
