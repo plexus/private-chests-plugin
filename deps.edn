@@ -1,6 +1,6 @@
 {:paths ["src" "test" "resources" "classes"]
  :deps  {org.clojure/clojure         {:mvn/version "1.11.1"}
-         com.lambdaisland/witchcraft {:local/root "/home/arne/github/lambdaisland/witchcraft"} #_{:mvn/version "RELEASE"}
+         com.lambdaisland/witchcraft {:mvn/version "RELEASE"}
          io.papermc.paper/paper-api  {:mvn/version "1.18.2-R0.1-SNAPSHOT"}}
 
  :aliases
