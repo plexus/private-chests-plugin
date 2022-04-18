@@ -55,9 +55,10 @@
    (fn [e]
      (let [player-name (wc/display-name (wc/player e))
            block-name (wc/display-name (wc/get-block e))]
-       (when (not (.startsWith block-name (str "@" player-name)))
+       (when (and block-name
+                  (= \@ (first block-name))
+                  (not (.startsWith block-name (str "@" player-name))))
          (e/cancel! e)))))
-
 
   (e/listen!
    :inventory-click
